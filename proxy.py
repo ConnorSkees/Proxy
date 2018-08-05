@@ -147,7 +147,7 @@ def proxy(number=1, exclude=[], require=[], validate=True, https_only=False, htt
     exclude = set([e.lower() for e in exclude])
 
 
-    if not all((exclude, require, https_only, http_only)):
+    if not any((exclude, require, https_only, http_only)):
         raw_list = make_request()[:number]
     else:
         raw_list = make_request()
@@ -169,7 +169,7 @@ def proxy(number=1, exclude=[], require=[], validate=True, https_only=False, htt
     if not all((https_only, http_only)):
         if https_only:
             proxies = [m for m in proxies if m[0].startswith("https://")]
-        elif http_only:
+        if http_only:
             proxies = [m for m in proxies if m[0].startswith("http://")]
 
     # gives country and level of anonymity (mostly for debug, but sometimes useful)
