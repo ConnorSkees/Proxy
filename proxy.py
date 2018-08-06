@@ -46,6 +46,9 @@ def main():
                                               "code, country name, and anonymity"
                                               " level)"))
 
+    parser.add_argument("--max", action='store_true', default=False,
+                        dest="max", help=("Get the maximum number of proxies possible"))
+
     args = parser.parse_args()
     sys.stdout.write(str(handle_args(args)))
 
@@ -56,13 +59,13 @@ def handle_args(args):
     """
     prox = proxy(number=args.count, exclude=args.exclude, require=args.require,
           validate=args.validate, http_only=args.http_only, https_only=args.https_only,
-          verbose=args.verbose)
+          verbose=args.verbose, max_=args.max)
 
-    return "\n{}\n".format(prox)
+    return "\n{}\n".format(len(set(prox)))
 
 VALID_PROXIES = []
 
-def make_request():
+def make_request(url):
     """
     Makes request to https://free-proxy-list.net/ and returns the table as a list
 
@@ -85,8 +88,18 @@ def make_request():
         'Content-Encoding': 'gzip',
         'Content-Type': 'text/html; charset=utf-8',
         }
-    response = requests.get('https://free-proxy-list.net/', headers=headers).text
-    return re.findall(r"<tr><td>[^<]*</td><td>[^<]*</td><td>[^<]*</td><td class='hm'>[^<]*</td><td>[^<]*</td><td class='hm'>[^<]*</td><td class='hx'>[^<]*</td><td class='hm'>[^<]*</td></tr>", response)
+
+    # to avoid iterating over a string
+    if isinstance(url, str):
+        url = [url]
+
+    total_data = []
+    for u in url:
+        response = requests.get(u, headers=headers).text
+        data = re.findall(r"<tr><td>[^<]*</td><td>[^<]*</td><td>[^<]*</td><td class='hm'>[^<]*</td><td>[^<]*</td><td class='hm'>[^<]*</td><td class='hx'>[^<]*</td><td class='hm'>[^<]*</td></tr>", response)
+        total_data += data
+
+    return total_data
 
 def threader(function, *params):
     """
@@ -120,7 +133,7 @@ def threader(function, *params):
 
     del threads[:]
 
-def proxy(number=1, exclude=[], require=[], validate=True, https_only=False, http_only=False, verbose=False):
+def proxy(number=1, exclude=[], require=[], validate=True, https_only=False, http_only=False, verbose=False, max_=False):
     """
     Args:
         function: function name
@@ -140,6 +153,8 @@ def proxy(number=1, exclude=[], require=[], validate=True, https_only=False, htt
 
     if number < 0:
         number = 1
+    elif number > 300:
+        max_ = True
 
     require = set([i.lower() for i in require])
 
@@ -147,10 +162,26 @@ def proxy(number=1, exclude=[], require=[], validate=True, https_only=False, htt
     exclude = set([e.lower() for e in exclude])
 
 
-    if not any((exclude, require, https_only, http_only)):
-        raw_list = make_request()[:number]
+    if not max:
+        if not any((exclude, require, https_only, http_only)):
+            raw_list = make_request('https://free-proxy-list.net/')[:number]
+        else:
+            raw_list = make_request('https://free-proxy-list.net/')
     else:
-        raw_list = make_request()
+        if not any((exclude, require, https_only, http_only)):
+            raw_list = make_request(['https://free-proxy-list.net/',
+                                     'https://free-proxy-list.net/uk-proxy.html',
+                                     'https://free-proxy-list.net/anonymous-proxy.html',
+                                     'https://www.us-proxy.org/',
+                                     'https://www.socks-proxy.net/',
+                                     'https://www.sslproxies.org/',])[:number]
+        else:
+            raw_list = make_request(['https://free-proxy-list.net/',
+                                     'https://free-proxy-list.net/uk-proxy.html',
+                                     'https://free-proxy-list.net/anonymous-proxy.html',
+                                     'https://www.us-proxy.org/',
+                                     'https://www.socks-proxy.net/',
+                                     'https://www.sslproxies.org/',])
 
     # splits valid data into a list
     raw = [m.replace("<tr><td>", "").replace("</td><td", "").replace("</td></tr>", "").split(">") for m in raw_list]
