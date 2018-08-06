@@ -1,6 +1,8 @@
 #!/usr/bin/env python
-
-import proxy
-
-if __name__ == "__main__":
+try:
+    import proxy
     proxy.main()
+except KeyboardInterrupt:
+    print("\nInterrupt recieved. Exiting now...")
+except ImportError:
+    print("\n\nCannot locate main file proxy.py.")
