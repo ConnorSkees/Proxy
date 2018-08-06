@@ -14,7 +14,7 @@ Python 3.x
 
 ## Usage 
 ### Positional Arguments
-* count The number of proxies.
+* `count` The number of proxies.
 ### Optional Arguments
 * `-ex --exclude [EX...]` Types of proxies to exclude. Valid values include country codes (US, CA, etc.), country names (United States, Canada, etc.), and proxy anonymity levels (elite proxy, anonymous, and transparent)
 * `-r --require [R...]` Include only proxies with these attributes. Valid values include country codes (US, CA, etc.), country names (United States, Canada, etc.), and proxy anonymity levels (elite proxy, anonymous, and transparent)
