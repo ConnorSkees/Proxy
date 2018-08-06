@@ -8,6 +8,39 @@ import sys
 import threading
 import requests
 
+def remove_duplicates(lst):
+    """
+    Removes duplicates like a set, but maintains them in their original order
+    and handles iterable keys
+
+    Args:
+        lst: A list, set, or tuple
+        check_case: True is case sensitive
+
+    Returns:
+        A list without duplicates in the same order
+    """
+    dictionary = {}
+    new_list = []
+    if not isinstance(lst, (list, tuple, set)):
+        if not lst:
+            return []
+        return [lst]
+
+    for i in lst:
+        try:
+            if dictionary[str(i)]:
+                continue
+        except KeyError:
+            new_list.append(i)
+            dictionary[str(i)] = True
+        except (TypeError, AttributeError):
+            if i in new_list:
+                continue
+            else:
+                new_list.append(i)
+    return new_list
+
 def main():
     """
     function for cli
@@ -46,8 +79,8 @@ def main():
                                               "code, country name, and anonymity"
                                               " level)"))
 
-    parser.add_argument("--max", action='store_true', default=False,
-                        dest="max", help=("Get the maximum number of proxies possible"))
+    parser.add_argument("--check-all", action='store_true', default=False,
+                        dest="max", help=("Check all proxies against requirements (about 600)"))
 
     args = parser.parse_args()
     sys.stdout.write(str(handle_args(args)))
@@ -59,9 +92,9 @@ def handle_args(args):
     """
     prox = proxy(number=args.count, exclude=args.exclude, require=args.require,
           validate=args.validate, http_only=args.http_only, https_only=args.https_only,
-          verbose=args.verbose, max_=args.max)
+          verbose=args.verbose, check_all=args.max)
 
-    return "\n{}\n".format(len(set(prox)))
+    return "\n{}\n".format(len(prox))
 
 VALID_PROXIES = []
 
@@ -133,7 +166,7 @@ def threader(function, *params):
 
     del threads[:]
 
-def proxy(number=1, exclude=[], require=[], validate=True, https_only=False, http_only=False, verbose=False, max_=False):
+def proxy(number=1, exclude=[], require=[], validate=True, https_only=False, http_only=False, verbose=False, check_all=False):
     """
     Args:
         function: function name
@@ -154,7 +187,7 @@ def proxy(number=1, exclude=[], require=[], validate=True, https_only=False, htt
     if number < 0:
         number = 1
     elif number > 300:
-        max_ = True
+        check_all = True
 
     require = set([i.lower() for i in require])
 
@@ -162,32 +195,27 @@ def proxy(number=1, exclude=[], require=[], validate=True, https_only=False, htt
     exclude = set([e.lower() for e in exclude])
 
 
-    if not max:
+    if not check_all:
         if not any((exclude, require, https_only, http_only)):
             raw_list = make_request('https://free-proxy-list.net/')[:number]
         else:
             raw_list = make_request('https://free-proxy-list.net/')
     else:
-        if not any((exclude, require, https_only, http_only)):
-            raw_list = make_request(['https://free-proxy-list.net/',
-                                     'https://free-proxy-list.net/uk-proxy.html',
-                                     'https://free-proxy-list.net/anonymous-proxy.html',
-                                     'https://www.us-proxy.org/',
-                                     'https://www.socks-proxy.net/',
-                                     'https://www.sslproxies.org/',])[:number]
-        else:
-            raw_list = make_request(['https://free-proxy-list.net/',
-                                     'https://free-proxy-list.net/uk-proxy.html',
-                                     'https://free-proxy-list.net/anonymous-proxy.html',
-                                     'https://www.us-proxy.org/',
-                                     'https://www.socks-proxy.net/',
-                                     'https://www.sslproxies.org/',])
+        raw_list = make_request(['https://free-proxy-list.net/',
+                                 'https://free-proxy-list.net/uk-proxy.html',
+                                 'https://free-proxy-list.net/anonymous-proxy.html',
+                                 'https://www.us-proxy.org/',
+                                 'https://www.socks-proxy.net/',
+                                 'https://www.sslproxies.org/',])
 
     # splits valid data into a list
     raw = [m.replace("<tr><td>", "").replace("</td><td", "").replace("</td></tr>", "").split(">") for m in raw_list]
 
     # (sorry this is long) it creates the full ip (http://47.75.62.90:80 for example) and removes/cleans the other values
     proxies = [["{}{}:{}".format("https://" if m[6].replace("class='hm'", "") == "yes " else "http://", m[0], m[1])] + [m[2].replace("class='hm'", "").strip()] + [m[3]] + [m[4].replace("class='hm'", "").strip()] for m in raw]
+
+    # remove duplicates
+    proxies = remove_duplicates(proxies)
 
     # remove values values not in require
     if require:
@@ -202,6 +230,8 @@ def proxy(number=1, exclude=[], require=[], validate=True, https_only=False, htt
             proxies = [m for m in proxies if m[0].startswith("https://")]
         if http_only:
             proxies = [m for m in proxies if m[0].startswith("http://")]
+
+
 
     # gives country and level of anonymity (mostly for debug, but sometimes useful)
     if not verbose:
