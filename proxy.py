@@ -94,7 +94,7 @@ def handle_args(args):
           validate=args.validate, http_only=args.http_only, https_only=args.https_only,
           verbose=args.verbose, check_all=args.max)
 
-    return "\n{}\n".format(len(prox))
+    return "\n{}\n".format(prox)
 
 VALID_PROXIES = []
 
@@ -209,7 +209,7 @@ def proxy(number=1, exclude=[], require=[], validate=True, https_only=False, htt
                                  'https://www.sslproxies.org/',])
 
     # splits valid data into a list
-    raw = [m.replace("<tr><td>", "").replace("</td><td", "").replace("</td></tr>", "").split(">") for m in raw_list]
+    raw = (m.replace("<tr><td>", "").replace("</td><td", "").replace("</td></tr>", "").split(">") for m in raw_list)
 
     # (sorry this is long) it creates the full ip (http://47.75.62.90:80 for example) and removes/cleans the other values
     proxies = [["{}{}:{}".format("https://" if m[6].replace("class='hm'", "") == "yes " else "http://", m[0], m[1])] + [m[2].replace("class='hm'", "").strip()] + [m[3]] + [m[4].replace("class='hm'", "").strip()] for m in raw]
@@ -230,8 +230,6 @@ def proxy(number=1, exclude=[], require=[], validate=True, https_only=False, htt
             proxies = [m for m in proxies if m[0].startswith("https://")]
         if http_only:
             proxies = [m for m in proxies if m[0].startswith("http://")]
-
-
 
     # gives country and level of anonymity (mostly for debug, but sometimes useful)
     if not verbose:
