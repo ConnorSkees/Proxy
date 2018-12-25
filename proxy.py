@@ -8,6 +8,10 @@ import sys
 import threading
 import requests
 
+
+# TODO: proxy docstring
+
+
 def remove_duplicates(lst):
     """
     Removes duplicates like a set, but maintains them in their original order
@@ -91,10 +95,10 @@ def handle_args(args):
                    http_only (bool), https_only (bool), verbose (bool)
     """
     prox = proxy(number=args.count, exclude=args.exclude, require=args.require,
-          validate=args.validate, http_only=args.http_only, https_only=args.https_only,
-          verbose=args.verbose, check_all=args.max)
+                 validate=args.validate, http_only=args.http_only, https_only=args.https_only,
+                 verbose=args.verbose, check_all=args.max)
 
-    return "\n{}\n".format(prox)
+    return f"\n{prox}\n"
 
 VALID_PROXIES = []
 
