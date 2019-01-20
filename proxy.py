@@ -221,7 +221,7 @@ def proxy(number=1, exclude=[], require=[], validate=True, https_only=False, htt
     # remove duplicates
     proxies = remove_duplicates(proxies)
 
-    # remove values values not in require
+    # remove values not in require
     if require:
         proxies = [m for m in proxies if (m[1].lower() or m[2].lower() or m[3].lower()) in require]
 
