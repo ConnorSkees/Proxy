@@ -2,15 +2,7 @@
 A module and CLI for quickly finding and testing proxies
 
 ## Requirements
-Python 3.x
-
-### Modules
-* argparse
-* random
-* re
-* sys
-* threading
-* requests
+Python 3.6+
 
 ## Usage 
 ### Positional Arguments
